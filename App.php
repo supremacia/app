@@ -14,6 +14,8 @@
 
 namespace Limp\App;
 
+use Limp\Data;
+
 class App 
 {
 
@@ -96,7 +98,7 @@ class App
             return static::$db[$alias];
         if (!isset(static::$config['db'][$alias]))
             return false; //caso $alias não existir em "config"
-        return static::$db[$alias] = new \Limp\Data\Db(static::$config['db'][$alias]); //instancia a classe e retorna
+        return static::$db[$alias] = new Db(static::$config['db'][$alias]); //instancia a classe e retorna
     }
 
     /** 
