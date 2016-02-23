@@ -17,60 +17,58 @@ namespace Limp\App;
 use Limp\Data;
 
 class App 
-{
-
-    static $config = [];
-    private static $dock = [];
+{    
     private static $router = null;
-    private static $root = null;
-    private static $php = null;
-    private static $ctrl = null;
+    private static $www = null;
+    private static $app = null;
+    private static $phar = null;
     private static $html = null;
-    private static $models = [];
+    private static $config = null;
+    private static $log = null;
     private static $style = null;
     private static $script = null;
-    private static $files = null;
-    private static $upload = null;
     private static $url = null;
     private static $rqst = [];
+
     private static $defaultController = 'home';
     private static $defaultAction = 'main';
+
+    private static $dock = [];
     private static $vars = [];
-    private static $db = [];
 
     static function url() 
     {
         return static::$url;
     }
 
-    static function root() 
+    static function www() 
     {
-        return static::$root;
+        return static::$www;
     }
 
-    static function php() 
+    static function app() 
     {
-        return static::$php;
+        return static::$app;
     }
 
-    static function inc($file) 
+    static function config() 
     {
-        return include static::$php . $file . '.php';
+        return static::$config;
     }
 
-    static function ctrl($file) 
+    static function log() 
     {
-        return include static::$ctrl . $file . '.php';
+        return static::$log;
+    }
+
+    static function phar() 
+    {
+        return static::$phar;
     }
 
     static function html()
     {
         return static::$html;
-    }
-
-    static function upload() 
-    {
-        return static::$upload;
     }
 
     static function style() 
@@ -82,40 +80,7 @@ class App
     {
         return static::$script;
     }
-
-    /** 
-     * Database access point
-     *
-     *  ex.: App::db('name', new Lib\Name); -> instancia o objeto com o nome "name"
-     *  ex.: App::db('name'); -> recupera o objeto "name"
-     */
-    static function db($alias = null, $node = null) 
-    {
-        if ($alias === null && $node === null && count(static::$config['db']) > 0)
-            $alias = array_keys(static::$config['db'])[0]; //pega o primeiro "alias" em config (default)
-
-        if (isset(static::$db[$alias]))
-            return static::$db[$alias];
-        if (!isset(static::$config['db'][$alias]))
-            return false; //caso $alias não existir em "config"
-        return static::$db[$alias] = new Db(static::$config['db'][$alias]); //instancia a classe e retorna
-    }
-
-    /** 
-     * Models root
-     *
-     *  ex.: App::model('name', new Model\Name); -> instancia o objeto com o nome "name"
-     *  ex.: App::model('name'); -> recupera o objeto "name"
-     */
-    static function model($alias, $node = null) 
-    {
-        if (isset(static::$models[$alias]))
-            return static::$models[$alias];
-        if ($node === null || !is_object($node))
-            return false;
-        return static::$models[$alias] = $node;
-    }
-
+   
     static function rqst($i = null) 
     {
         if ($i === null)
@@ -123,48 +88,18 @@ class App
         return isset(static::$rqst[$i]) ? static::$rqst[$i] : null;
     }
 
-    static function val($n, $v = null) 
-    {
-        if ($v === null)
-            return static::$vars[$n];
-        static::$vars[$n] = $v;
-    }
-
-    static function getConfig($item = null) 
-    {
-        if ($item !== null && isset(static::$config[$item]))
-            return static::$config[$item];
-        else
-            return static::$config;
-    }
-
-    static function mount(Router $router) 
-    {
-        static::$router = $router;
-
-        static::$root = ¢WWW;
-        static::$php = ¢APP . '';
-        static::$ctrl = ¢APP . 'controller/';
-        static::$html = ¢HTML . '';
-        static::$upload = ¢APP . 'upload/';
-        static::$style = ¢CSS;
-        static::$script = ¢JS;
-
-        static::$url = ¢URL;
-        static::$rqst = explode('/', ¢RQST);
-        static::$files = ¢URL . 'files/';
-    }
-
-    /**
-     * Run application controller
-     * @return object Controller
+    /* Set/Get variables
+     * name = value par
+     *
      */
-    static function run() 
+    static function val($name, $value = null) 
     {
-        return static::runController(static::$router);
+        if ($value === null)
+            return static::$vars[$name];
+        static::$vars[$name] = $value;
     }
 
-    /* Parking Object
+    /* Parking Objects
      * 
      */
     static function push($name, $object) 
@@ -177,24 +112,33 @@ class App
         return isset(static::$dock[$name]) ? static::$dock[$name] : false;
     }
 
-    /**
-     * Configure DataBase connections
+    /* Mount static data object
      *
      */
-    static function dbConnection($alias, $dsn, $user, $passw) 
+    static function mount(Router $router = null, $cfg = null) 
     {
-        static::$config['db'][$alias] = ['dsn' => $dsn, 'user' => $user, 'passw' => $passw];
+        if(!is_object($router)) $router = include _CONFIG.'router.php';
+        static::$router = $router;
+
+        static::$www = isset($cfg['www']) ? $cfg['www'] : _WWW;
+        static::$app = isset($cfg['app']) ? $cfg['app'] : _APP;
+        static::$phar = isset($cfg['phar']) ? $cfg['phar'] : _PHAR;
+        static::$html = isset($cfg['html']) ? $cfg['html'] : _HTML;
+        static::$style = isset($cfg['css']) ? $cfg['css'] : _CSS;
+        static::$script = isset($cfg['js']) ? $cfg['js'] : _JS;
+        static::$config = isset($cfg['config']) ? $cfg['config'] : _CONFIG;
+        static::$log = isset($cfg['log']) ? $cfg['log'] : _LOG;
+        static::$url = isset($cfg['url']) ? $cfg['url'] : _URL;
+        static::$rqst = explode('/', (isset($cfg['rqst']) ? $cfg['rqst'] : ¢RQST));
     }
 
     /**
-     * Set default DataBase connection
-     *
+     * Run application controller
+     * @return object Controller
      */
-    static function dbDefault($alias = null) 
+    static function run() 
     {
-        if ($alias !== null && is_string($alias))
-            static::$config['default_db'] = $alias;
-        return static::$config['default_db'];
+        return static::runController(static::$router);
     }
 
     /**
@@ -220,13 +164,12 @@ class App
 
     /* Jump to...
      *
-     *
      */
     static function go($url = '', $type = 'refresh', $cod = 302) 
     {
         //se tiver 'http' na uri então será externo.
         if (strpos($url, 'http://') === false || strpos($url, 'https://') === false)
-            $url = ¢URL . $url;
+            $url = static::$url.$url;
 
         //send header
         if (strtolower($type) == 'refresh')
@@ -236,6 +179,55 @@ class App
 
         //... and stop
         exit;
+    }
+
+    //Download de arquivo em modo PHAR (interno)
+    static function download($reqst = '') {
+
+        //checando a existencia do arquivo solicitado
+        $reqst = static::fileExists($reqst);
+        if($reqst == false) return false;
+
+        //gerando header apropriado
+        include static::$config.'mimetypes.php';
+        $ext = end((explode('.', $reqst)));
+        if (!isset($_mimes[$ext])) $mime = 'text/plain';
+        else $mime = (is_array($_mimes[$ext])) ? $_mimes[$ext][0] : $_mimes[$ext];
+
+        //get file
+        $dt = file_get_contents($reqst);
+
+        //download
+        ob_end_clean();
+        ob_start('ob_gzhandler');
+
+        header('Vary: Accept-Language, Accept-Encoding');
+        header('Content-Type: ' . $mime);
+        header('Expires: ' . gmdate('D, d M Y H:i:s', time() + 31536000) . ' GMT');
+        header('Last-Modified: ' . gmdate('D, d M Y H:i:s', filemtime($reqst)) . ' GMT');
+        header('Cache-Control: must_revalidate, public, max-age=31536000');
+        header('Content-Length: ' . strlen($dt));
+        header('Content-Disposition: attachment; filename='.basename($reqst)); 
+        header('ETAG: '.md5($reqst));
+        exit($dt);
+    }
+
+    //Check if file exists - return real path of file or false
+    static function fileExists($file){
+        if(file_exists($file)) return $file;
+        if(file_exists(static::$www.$file)) return static::$www.$file;
+        if(file_exists(static::$phar.$file)) return static::$phar.$file;
+        $xfile = str_replace(static::$www, static::$phar, $file);
+        if(file_exists($xfile)) return $xfile;
+        return false;
+    }
+
+    //Print mixed data and exit
+    static function e($v) { exit(p($v)); }
+    static function p($v, $echo = false) {
+        $tmp = '<pre>' . print_r($v, true) . '</pre>';
+        if ($echo) echo $tmp;
+        else return $tmp;
     }
 
 }

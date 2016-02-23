@@ -29,7 +29,7 @@ class Router
         if ($request !== null)
             define('¢RQST', $request);
         if ($url !== null)
-            define('¢URL', $url);
+            define('_URL', $url);
         $this->routers = $routers;
         $this->method = $this->requestMethod();
         $this->mount();
@@ -132,10 +132,10 @@ class Router
         //URL & REQST Constants:
         defined('¢RQST') || define('¢RQST', urldecode(isset($_SERVER['REQUEST_URI']) ? urldecode(trim(str_replace($base, '', trim($_SERVER['REQUEST_URI'])), ' /')) : ''));
 
-        defined('¢URL') || define('¢URL', isset($_SERVER['SERVER_NAME']) ? $http . $_SERVER['SERVER_NAME'] . $base . '/' : '');
+        defined('_URL') || define('_URL', isset($_SERVER['SERVER_NAME']) ? $http . $_SERVER['SERVER_NAME'] . $base . '/' : '');
 
         $this->request = ¢RQST;
-        $this->url = ¢URL;
+        $this->url = _URL;
         $this->base = $base;
         $this->http = $http;
     }
