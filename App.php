@@ -223,7 +223,7 @@ class App
     }
 
     //Print mixed data and exit
-    static function e($v) { exit(p($v)); }
+    static function e($v) { exit(static::p($v)); }
     static function p($v, $echo = false) {
         $tmp = '<pre>' . print_r($v, true) . '</pre>';
         if ($echo) echo $tmp;
