@@ -27,7 +27,7 @@ class Router
     function __construct($routers = [], $request = null, $url = null) 
     {
         if ($request !== null)
-            define('¢RQST', $request);
+            define('_RQST', $request);
         if ($url !== null)
             define('_URL', $url);
         $this->routers = $routers;
@@ -130,11 +130,11 @@ class Router
             $base .= ':' . $_SERVER['SERVER_PORT'];
 
         //URL & REQST Constants:
-        defined('¢RQST') || define('¢RQST', urldecode(isset($_SERVER['REQUEST_URI']) ? urldecode(trim(str_replace($base, '', trim($_SERVER['REQUEST_URI'])), ' /')) : ''));
+        defined('_RQST') || define('_RQST', urldecode(isset($_SERVER['REQUEST_URI']) ? urldecode(trim(str_replace($base, '', trim($_SERVER['REQUEST_URI'])), ' /')) : ''));
 
         defined('_URL') || define('_URL', isset($_SERVER['SERVER_NAME']) ? $http . $_SERVER['SERVER_NAME'] . $base . '/' : '');
 
-        $this->request = ¢RQST;
+        $this->request = _RQST;
         $this->url = _URL;
         $this->base = $base;
         $this->http = $http;

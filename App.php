@@ -29,6 +29,7 @@ class App
     private static $script = null;
     private static $url = null;
     private static $rqst = [];
+    private static $params = [];
 
     private static $defaultController = 'home';
     private static $defaultAction = 'main';
@@ -88,6 +89,11 @@ class App
         return isset(static::$rqst[$i]) ? static::$rqst[$i] : null;
     }
 
+    static function params() 
+    {
+        return static::$params;
+    }
+
     /* Set/Get variables
      * name = value par
      *
@@ -129,7 +135,7 @@ class App
         static::$config = isset($cfg['config']) ? $cfg['config'] : _CONFIG;
         static::$log = isset($cfg['log']) ? $cfg['log'] : _LOG;
         static::$url = isset($cfg['url']) ? $cfg['url'] : _URL;
-        static::$rqst = explode('/', (isset($cfg['rqst']) ? $cfg['rqst'] : ¢RQST));
+        static::$rqst = explode('/', (isset($cfg['rqst']) ? $cfg['rqst'] : _RQST));
     }
 
     /**
@@ -149,12 +155,20 @@ class App
     {
         $res = $router->resolve();
 
-        $ctrl = ucfirst($res['controller'] !== null ? $res['controller'] : static::$defaultController);
+        $ctrl = $res['controller'] !== null ? $res['controller'] : static::$defaultController;
         $action = $res['action'] !== null ? $res['action'] : static::$defaultAction;
 
+        //Name format to Controller namespace
+        $tmp = explode('\\', str_replace('/', '\\', $ctrl));
+        $ctrl = '\\Controller';
+        foreach($tmp as $tmp1){
+            $ctrl .= '\\'.ucfirst($tmp1);
+        }
+
         //instantiate the controller
-        $ctrl = '\\Controller\\' . $ctrl;
         $controller = new $ctrl(['params' => $res['params'], 'request' => static::rqst()]);
+
+        static::$params = $res['params'];
 
         if (method_exists($controller, $action))
             return $controller->$action();
@@ -165,7 +179,7 @@ class App
     /* Jump to...
      *
      */
-    static function go($url = '', $type = 'refresh', $cod = 302) 
+    static function go($url = '', $type = 'location', $cod = 302) 
     {
         //se tiver 'http' na uri então será externo.
         if (strpos($url, 'http://') === false || strpos($url, 'https://') === false)
@@ -223,7 +237,7 @@ class App
     }
 
     //Print mixed data and exit
-    static function e($v) { exit(p($v)); }
+    static function e($v) { exit(static::p($v)); }
     static function p($v, $echo = false) {
         $tmp = '<pre>' . print_r($v, true) . '</pre>';
         if ($echo) echo $tmp;
